@@ -15,10 +15,11 @@
 // ════════════════════════════════════════════════════════════════
 
 export const firebaseConfig = {
-  apiKey: "PASTE_API_KEY",
-  authDomain: "PASTE_PROJECT.firebaseapp.com",
-  projectId: "PASTE_PROJECT_ID",
-  storageBucket: "PASTE_PROJECT.appspot.com",
-  messagingSenderId: "PASTE_SENDER_ID",
-  appId: "PASTE_APP_ID"
+  apiKey: "AIzaSyAG-bF9qny9cgXbJvZKlAdhYxQ5y6zmx8c",
+  authDomain: "avicasino-bbf96.firebaseapp.com",
+  projectId: "avicasino-bbf96",
+  storageBucket: "avicasino-bbf96.firebasestorage.app",
+  messagingSenderId: "521269776496",
+  appId: "1:521269776496:web:bd23895fc500f2c6cea4b5",
+  measurementId: "G-3MMWV5XF18"
 };
