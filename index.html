@@ -285,7 +285,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, updateDoc }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -308,8 +308,14 @@ const configured = !firebaseConfig.apiKey.startsWith('PASTE');
 
 function initFirebase(){
   if(!configured){ showScreen('setup'); return; }
-  const appF=initializeApp(firebaseConfig);
+  let appF;
+  try{ appF=initializeApp(firebaseConfig); }
+  catch(e){ console.error(e); showScreen('login'); toast('שגיאת אתחול Firebase'); return; }
   auth=getAuth(appF); db=getFirestore(appF);
+  getRedirectResult(auth).catch(e=>{
+    console.error('redirect error:',e.code,e.message);
+    toast(ERR[e.code] || ('שגיאה: '+(e.code||e.message)));
+  });
   onAuthStateChanged(auth, async (user)=>{
     if(user){ await handleLogin(user); }
     else { currentUser=null; showScreen('login'); }
@@ -341,13 +347,22 @@ function persistChips(){
   saveT=setTimeout(()=>{ updateDoc(doc(db,'users',currentUser.uid),{chips:balance}).catch(()=>{}); },700);
 }
 
+const ERR={
+  'auth/unauthorized-domain':'הדומיין לא מורשה — הוסף את eitanbarkochva.github.io ל-Authorized domains ב-Firebase',
+  'auth/operation-not-allowed':'התחברות גוגל לא מופעלת — הפעל אותה ב-Authentication → Sign-in method',
+  'auth/popup-blocked':'הדפדפן חסם את החלון — מנסה שיטה חלופית…',
+  'auth/popup-closed-by-user':'חלון ההתחברות נסגר לפני סיום',
+  'auth/cancelled-popup-request':'נסה שוב',
+  'auth/configuration-not-found':'Authentication לא מוגדר בפרויקט — הפעל Google ב-Authentication'
+};
 document.getElementById('googleBtn').onclick=async()=>{
   try{ await signInWithPopup(auth,new GoogleAuthProvider()); }
   catch(e){
-    console.error(e);
-    if(e.code==='auth/unauthorized-domain')
-      toast('הדומיין לא מורשה — הוסף אותו ל-Authorized domains ב-Firebase');
-    else toast('ההתחברות בוטלה');
+    console.error('login error:',e.code,e.message);
+    if(e.code==='auth/popup-blocked'||e.code==='auth/cancelled-popup-request'){
+      try{ await signInWithRedirect(auth,new GoogleAuthProvider()); return; }catch(e2){ console.error(e2); }
+    }
+    toast(ERR[e.code] || ('שגיאה: '+(e.code||e.message)));
   }
 };
 document.getElementById('logoutBtn').onclick=()=>signOut(auth);
